@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wn.mapper.ProductMapper" >
+  <resultMap id="BaseResultMap" type="com.wn.pojo.Product" >
+    <constructor >
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="category_id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="name" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="subtitle" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="main_image" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="price" jdbcType="DECIMAL" javaType="java.math.BigDecimal" />
+      <arg column="stock" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="status" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+    id, category_id, name, subtitle, main_image, price, stock, status, create_time, update_time
+  </sql>
+  <sql id="Blob_Column_List" >
+    sub_images, detail
+  </sql>
+
+  <resultMap id="LooKVOId" type="com.wn.vo.ProductLookVO">
+    <result column="name" property="name"></result>
+    <result column="subtitle" property="subtitle"></result>
+    <result column="categoryname" property="categoryname"></result>
+    <result column="price" property="price"></result>
+    <result column="stock" property="stock"></result>
+    <result column="main_image" property="mainImage"></result>
+    <result column="detail" property="detail"></result>
+  </resultMap>
+
+  <select id="queryById" resultMap="LooKVOId">
+    select
+        mmall_product.name as name,subtitle,
+        mmall_category.name as categoryname,price,stock,main_image,detail
+    from mmall_product,mmall_category
+    where mmall_product.category_id = mmall_category.id
+    and mmall_product.id = #{id}
+  </select>
+
+  <!--逻辑删除商品-->
+  <update id="setSaleSatus">
+    update mmall_product set status = #{status} where id = #{productId}
+  </update>
+
+  <!--添加商品-->
+  <insert id="addProduct">
+    insert into
+    mmall_product(category_id,name,subtitle,main_image,detail,price,stock,sub_images)
+    values
+    (#{categoryId},#{name},#{subtitle},#{mainImage},#{detail},#{price},#{stock},#{subImages})
+  </insert>
+
+
+
+
+
+
+
+  <!--分页查询商品管理所有商品-->
+  <select id="queryAll" resultType="com.wn.pojo.Product">
+    select id,name,stock,price,status from mmall_product
+    where status in (1,2)
+  </select>
+
+  <!--逻辑删除商品-->
+  <update id="logicDeleteProductById">
+    update mmall_product set status = 3 where id = #{id}
+  </update>
+
+
+
+  <!-- *****************前台********* -->
+  <!--按商品名关键字搜索或父类id分页查询 -->
+  <select id="list" resultType="com.wn.pojo.Product">
+    select * from mmall_product
+    <where>
+      <if test="keyword != null">
+        name like #{keyword}
+      </if>
+      <if test="keyword == null">
+        category_id in
+        <foreach collection="list" open="(" close=")" separator="," item="productId">
+          #{productId}
+        </foreach>
+      </if>
+      order by price
+      <if test="orderBy == 'price_desc'">
+        desc
+      </if>
+    </where>
+  </select>
+
+
+  <!--根据商品id获取商品详情-->
+  <select id="getProductDeatilById" resultType="com.wn.pojo.Product">
+        select * from mmall_product where id = #{id}
+  </select>
+</mapper>
